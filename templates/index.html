@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Inventario con Visión</title>
+  <style>
+    /* Fuente moderna */
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f9fafc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.2em;
+      margin-bottom: 20px;
+      color: #222;
+      animation: fadeInDown 1s ease;
+    }
+
+    h2, h3, h4 {
+      color: #444;
+    }
+
+    /* Animaciones */
+    @keyframes fadeInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeInDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    img.preview {
+      max-width: 260px;
+      border-radius: 12px;
+      margin-top: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    img.preview:hover {
+      transform: scale(1.05);
+    }
+
+    button {
+      background: linear-gradient(135deg, #0072ff, #00c6ff);
+      border: none;
+      padding: 10px 18px;
+      margin-top: 12px;
+      border-radius: 30px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 114, 255, 0.3);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      animation: fadeInUp 1s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+    td img {
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+    }
+    td img:hover {
+      transform: scale(1.08);
+    }
+
+    .ok { color: #0a7f2e; font-weight: 600; }
+    .warn { color: #c00; font-weight: 600; }
+    .muted { color:#666; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>📦 Inventario</h1>
+
+  <!-- === Reconocimiento por Imagen === -->
+  <div class="card">
+    <h3>🔎 Reconocer producto por imagen</h3>
+    <div class="grid grid-2">
+      <div>
+        <input type="file" id="fileInput" accept="image/*" capture="environment">
+        <div>
+          <img id="preview" class="preview" alt="">
+        </div>
+        <button id="btnReconocer">Reconocer</button>
+        <span id="estado" class="muted"></span>
+      </div>
+      <div>
+        <h4>Resultado</h4>
+        <div id="resultado">Sube una foto enfocando el producto.</div>
+      </div>
+    </div>
+    <small class="muted">✨ Sugerencia: usa fotos frontales, buena luz y sin reflejos.</small>
+  </div>
+
+  <!-- === Alta de producto === -->
+  <div class="card">
+    <h3>➕ Agregar producto</h3>
+    <form action="{{ url_for('agregar') }}" method="post" enctype="multipart/form-data">
+      <input type="text" name="nombre" placeholder="Nombre del producto" required>
+      <input type="text" name="categoria" placeholder="Categoría">
+      <input type="number" name="stock" placeholder="Stock" required>
+      <input type="number" step="0.01" name="precio" placeholder="Precio" required>
+      <input type="file" name="imagen" accept="image/*" required>
+      <button type="submit">Agregar</button>
+    </form>
+    <div class="muted">📌 La imagen subida se usará como referencia para reconocimiento.</div>
+  </div>
+
+  <!-- === Listado === -->
+  <h2>📋 Lista de productos</h2>
+  <table>
+    <tr>
+      <th>Nombre</th><th>Categoría</th><th>Stock</th><th>Precio</th><th>Fecha ingreso</th><th>Imagen</th>
+    </tr>
+    {% for p in productos %}
+    <tr>
+      <td>{{ p['nombre'] }}</td>
+      <td>{{ p['categoria'] }}</td>
+      <td>{{ p['stock'] }}</td>
+      <td>S/. {{ p['precio'] }}</td>
+      <td>{{ p['fecha_ingreso'] }}</td>
+      <td>
+        {% if p['imagen'] %}
+          <img src="{{ p['imagen'] }}" width="100">
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const preview   = document.getElementById('preview');
+    const btn       = document.getElementById('btnReconocer');
+    const out       = document.getElementById('resultado');
+    const estado    = document.getElementById('estado');
+
+    // Vista previa
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files?.[0];
+      if (!f) { preview.src = ""; return; }
+      const reader = new FileReader();
+      reader.onload = e => { preview.src = e.target.result; };
+      reader.readAsDataURL(f);
+    });
+
+    // Llamar al backend /reconocer
+    btn.addEventListener('click', async () => {
+      const f = fileInput.files?.[0];
+      if (!f) { alert('Selecciona una imagen'); return; }
+      const fd = new FormData();
+      fd.append('imagen', f);
+      estado.textContent = "Procesando...";
+      out.innerHTML = "";
+
+      try {
+        const r = await fetch('/reconocer', { method: 'POST', body: fd });
+        const data = await r.json();
+        estado.textContent = "";
+        if (!data.ok) {
+          out.innerHTML = `<span class="warn">${data.msg}</span>` + 
+                          (data.debug_score ? ` (score=${data.debug_score})` : "");
+          return;
+        }
+        out.innerHTML = `
+          <div class="ok"><b>Producto reconocido ✔</b></div>
+          <div><b>${data.nombre}</b> (${data.categoria})</div>
+          <div>Precio: S/. ${data.precio}</div>
+          <div>Stock: ${data.stock}</div>
+          <div>Fecha ingreso: ${data.fecha_ingreso}</div>
+          <div class="muted">score: ${data.match_score}</div>
+          ${data.imagen ? `<div><img src="${data.imagen}" width="120"></div>` : ""}
+          <div style="margin-top:8px;">${data.descripcion}</div>
+        `;
+      } catch (e) {
+        estado.textContent = "";
+        out.innerHTML = `<span class="warn">⚠ Error llamando al backend</span>`;
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
