@@ -14,7 +14,7 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 init_db()
 
 # Inicializar reconocedor (carga imágenes de referencia desde BD)
-recognizer = ProductRecognizer(image_base_dir=".")
+recognizer = ProductRecognizer()
 recognizer.reload()
 
 # Lista de marcas (por si la usas en tu formulario)
@@ -25,9 +25,8 @@ marcas = ["Ésika", "Natura", "L'Bel", "Yanbal", "Cyzone",
 @app.route("/")
 def index():
     conn = get_connection()
-    # Formateamos fecha como dd-mm-YYYY al traerla
     productos = conn.execute("""
-        SELECT id, nombre, categoria, stock, precio, imagen,
+        SELECT id, nombre, categoria, marca, stock, precio, imagen,
                strftime('%d-%m-%Y', fecha_ingreso) AS fecha_ingreso
         FROM productos
         ORDER BY id DESC
@@ -40,33 +39,65 @@ def index():
 def agregar():
     nombre = request.form["nombre"]
     categoria = request.form.get("categoria", "")
+    marca = request.form.get("marca", "")  # ✅ nuevo campo
     stock = request.form.get("stock", 0)
     precio = request.form.get("precio", 0)
-
-    # Guardar solo la fecha (dd-mm-YYYY)
-    fecha_ingreso = datetime.now().strftime("%d-%m-%Y")
 
     imagen = None
     if "imagen" in request.files:
         file = request.files["imagen"]
         if file and file.filename != "":
-            # Guardar imagen subida como referencia
             save_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
             file.save(save_path)
             imagen = save_path
 
     conn = get_connection()
     conn.execute("""
-        INSERT INTO productos (nombre, categoria, stock, precio, imagen, fecha_ingreso)
+        INSERT INTO productos (nombre, categoria, marca, stock, precio, imagen)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (nombre, categoria, stock, precio, imagen, fecha_ingreso))
+    """, (nombre, categoria, marca, stock, precio, imagen))
     conn.commit()
     conn.close()
 
-    # Recargar referencias para incluir este nuevo producto como referencia
     recognizer.reload()
 
     return redirect(url_for("index"))
+
+# Ruta para eliminar producto
+@app.route("/eliminar/<int:id>", methods=["POST"])
+def eliminar(id):
+    conn = get_connection()
+    conn.execute("DELETE FROM productos WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    recognizer.reload()  # recarga referencias si eliminas uno existente
+    return redirect(url_for("index"))
+
+# Ruta para editar producto (solo ejemplo)
+@app.route("/editar/<int:id>", methods=["GET", "POST"])
+def editar(id):
+    conn = get_connection()
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        categoria = request.form.get("categoria", "")
+        marca = request.form.get("marca", "")
+        stock = request.form.get("stock", 0)
+        precio = request.form.get("precio", 0)
+        conn.execute("""
+            UPDATE productos
+            SET nombre=?, categoria=?, marca=?, stock=?, precio=?
+            WHERE id=?
+        """, (nombre, categoria, marca, stock, precio, id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for("index"))
+
+    # GET → mostrar formulario con datos
+    producto = conn.execute("SELECT * FROM productos WHERE id=?", (id,)).fetchone()
+    conn.close()
+    return render_template("editar.html", producto=producto, marcas=marcas)
+
+
 
 # Recargar referencias manualmente (por si agregas muchas imágenes)
 @app.route("/recargar_referencias", methods=["POST"])
@@ -77,16 +108,53 @@ def recargar_referencias():
 # Reconocer producto a partir de una imagen enviada (multipart/form-data)
 @app.route("/reconocer", methods=["POST"])
 def reconocer():
-    if "imagen" not in request.files:
-        return jsonify({"ok": False, "msg": "Falta el archivo 'imagen'"}), 400
+    file = request.files.get("imagen")
+    if not file:
+        return jsonify({"ok": False, "msg": "No se envió imagen"})
 
-    file = request.files["imagen"]
-    if not file or file.filename == "":
-        return jsonify({"ok": False, "msg": "Archivo vacío"}), 400
+    path = "static/temp.jpg"
+    file.save(path)
 
-    # Leer bytes -> BGR (OpenCV)
-    file_bytes = np.frombuffer(file.read(), np.uint8)
-    bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    nombre, score = recognizer.recognize(path)
+    # Si recognizer devuelve un dict con info del producto
+    if isinstance(nombre, dict):
+        producto_nombre = nombre.get("nombre")
+    else:
+        producto_nombre = nombre
+    if not producto_nombre:
+        return jsonify({"ok": False, "msg": "No se encontró coincidencia", "debug_score": score})
+    
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM productos WHERE nombre = ?", (producto_nombre,)).fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({"ok": False, "msg": "No se encontró en base de datos"})
+
+    return jsonify({
+    "ok": True,
+    "nombre": row["nombre"],
+    "categoria": row["categoria"],
+    "marca": row["marca"] if "marca" in row.keys() else "Sin marca",
+    "precio": row["precio"] if "precio" in row.keys() else "No registrado",
+    "imagen": row["imagen"],
+    "match_score": score,
+    "fecha_ingreso": row["fecha_ingreso"] if "fecha_ingreso" in row.keys() else None
+    })
+
+
+    # 📸 Reconocer producto desde imagen base64 (por cámara de celular)
+@app.route("/reconocer_base64", methods=["POST"])
+def reconocer_base64():
+    data = request.json
+    if not data or "image" not in data:
+        return jsonify({"ok": False, "msg": "Falta campo 'image'"}), 400
+
+    import base64
+    img_b64 = data["image"].split(",")[-1]
+    img_bytes = base64.b64decode(img_b64)
+    np_arr = np.frombuffer(img_bytes, np.uint8)
+    bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     if bgr is None:
         return jsonify({"ok": False, "msg": "No se pudo decodificar la imagen"}), 400
 
@@ -94,7 +162,6 @@ def reconocer():
     if not ref:
         return jsonify({"ok": False, "msg": "No se reconoció el producto", "debug_score": score})
 
-    # Traer datos completos desde BD
     conn = get_connection()
     prod = conn.execute("""
         SELECT id, nombre, categoria, stock, precio, imagen,
@@ -107,7 +174,6 @@ def reconocer():
     if not prod:
         return jsonify({"ok": False, "msg": "Referencia encontrada pero no existe en BD"})
 
-    # Puedes construir una "descripción" simple combinando campos
     descripcion = f"{prod['nombre']} ({prod['categoria']}) - Precio S/. {prod['precio']}"
 
     return jsonify({
@@ -120,7 +186,7 @@ def reconocer():
         "fecha_ingreso": prod["fecha_ingreso"],
         "imagen": prod["imagen"],
         "descripcion": descripcion,
-        "match_score": score  # útil para ajustar umbral
+        "match_score": score
     })
 
 if __name__ == "__main__":

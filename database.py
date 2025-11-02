@@ -14,12 +14,11 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
         categoria TEXT NOT NULL,
-        stock INTEGER,
+        marca TEXT,             -- ✅ nueva columna
         precio REAL,
         imagen TEXT,
-        fecha_ingreso TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        fecha_ingreso TEXT DEFAULT CURRENT_TIMESTAMP
     )
     """)
     conn.commit()
     conn.close()
-

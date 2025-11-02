@@ -1,0 +1,183 @@
+/* === GENERAL === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", system-ui, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #eef2f3, #ffffff);
+  color: #333;
+  padding: 30px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.4rem;
+  margin-bottom: 25px;
+  color: #0a2540;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: floatDown 0.6s ease-out;
+}
+
+h2 {
+  color: #12324b;
+  margin-top: 40px;
+  border-bottom: 3px solid #1e88e5;
+  display: inline-block;
+  padding-bottom: 4px;
+}
+
+/* === CARDS === */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 25px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.card h3 {
+  color: #1e88e5;
+  margin-bottom: 12px;
+}
+
+/* === GRID === */
+.grid {
+  display: grid;
+  gap: 20px;
+}
+.grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* === INPUTS Y BOTONES === */
+input, button, select {
+  font-size: 1rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input:focus {
+  border-color: #1e88e5;
+  box-shadow: 0 0 6px rgba(30, 136, 229, 0.3);
+}
+
+button {
+  background: linear-gradient(135deg, #1e88e5, #42a5f5);
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* === PREVIEW IMAGEN === */
+.preview {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  object-fit: cover;
+  animation: fadeIn 0.5s ease;
+}
+
+/* === TABLA === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+th, td {
+  padding: 12px 10px;
+  text-align: center;
+}
+
+th {
+  background: #1e88e5;
+  color: white;
+  font-weight: 600;
+}
+
+td {
+  background: #f9f9f9;
+}
+
+tr:nth-child(even) td {
+  background: #f1f7ff;
+}
+
+/* === TEXTOS AUXILIARES === */
+.muted {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.warn {
+  color: #e53935;
+  font-weight: 500;
+}
+
+.ok {
+  color: #43a047;
+  font-weight: 600;
+}
+
+/* === VIDEO CAMARA === */
+video {
+  border-radius: 12px;
+  border: 3px solid #1e88e5;
+  width: 100%;
+  max-width: 360px;
+  display: block;
+  margin: 10px auto;
+  animation: fadeIn 0.6s ease;
+}
+
+/* === ANIMACIONES === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  body {
+    padding: 15px;
+  }
+}

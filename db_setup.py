@@ -4,17 +4,21 @@ import sqlite3
 conn = sqlite3.connect("inventario.db")
 cursor = conn.cursor()
 
-# Tabla productos con campo 'marca'
+# Tabla productos
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS productos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
-    marca TEXT NOT NULL,
-    stock INTEGER NOT NULL
+    categoria TEXT,
+    marca TEXT,
+    stock INTEGER,
+    precio REAL,
+    imagen TEXT,
+    fecha_ingreso TEXT DEFAULT (strftime('%d-%m-%Y', 'now'))
 )
 """)
 
-# Tabla historial ventas / salidas
+# Tabla historial
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS historial (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,11 +29,13 @@ CREATE TABLE IF NOT EXISTS historial (
 )
 """)
 
-# Insertar productos de prueba con marca
-cursor.execute("INSERT INTO productos (nombre, marca, stock) VALUES (?, ?, ?)", ("Perfume", "Natura", 10))
-cursor.execute("INSERT INTO productos (nombre, marca, stock) VALUES (?, ?, ?)", ("Crema", "Yanbal", 15))
+# Insertar productos de prueba
+cursor.execute("INSERT INTO productos (nombre, categoria, marca, stock, precio) VALUES (?, ?, ?, ?, ?)",
+               ("Perfume", "Fragancia", "Natura", 10, 45.0))
+cursor.execute("INSERT INTO productos (nombre, categoria, marca, stock, precio) VALUES (?, ?, ?, ?, ?)",
+               ("Crema hidratante", "Cuidado de piel", "Yanbal", 15, 30.0))
 
 conn.commit()
 conn.close()
 
-print("✅ Base de datos creada con productos de prueba y marcas")
+print("✅ Base de datos creada correctamente con productos de prueba y fecha automática.")

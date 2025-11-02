@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Producto | InnovVentas</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    /* 🌟 Fondo animado */
+    .bubbles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .bubbles span {
+      position: absolute;
+      bottom: -100px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      animation: rise 10s infinite ease-in;
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) scale(1); opacity: 0.7; }
+      100% { transform: translateY(-1200px) scale(1.5); opacity: 0; }
+    }
+
+    /* 🎨 Tarjeta del formulario */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 2rem 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      width: 400px;
+      color: #fff;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.3rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      color: #333;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      transform: scale(1.02);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+    }
+
+    button {
+      width: 100%;
+      margin-top: 1.8rem;
+      padding: 0.9rem;
+      background: linear-gradient(90deg, #ff9966, #ff5e62);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(255, 153, 102, 0.8);
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: opacity 0.3s ease;
+    }
+
+    .back-link:hover {
+      opacity: 0.8;
+    }
+
+    /* ✨ Detalles decorativos */
+    .emoji {
+      text-align: center;
+      font-size: 2rem;
+      animation: bounce 1.5s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Fondo animado -->
+  <div class="bubbles">
+    <span style="left: 10%; animation-delay: 0s; width: 20px; height: 20px;"></span>
+    <span style="left: 25%; animation-delay: 2s;"></span>
+    <span style="left: 40%; animation-delay: 4s; width: 30px; height: 30px;"></span>
+    <span style="left: 60%; animation-delay: 1s;"></span>
+    <span style="left: 80%; animation-delay: 3s;"></span>
+  </div>
+
+  <!-- Tarjeta -->
+  <div class="card">
+    <div class="emoji">💫</div>
+    <h2>Editar Producto</h2>
+
+    <form method="POST">
+      <label>Nombre:</label>
+      <input type="text" name="nombre" value="{{ producto['nombre'] }}" required>
+
+      <label>Categoría:</label>
+      <input type="text" name="categoria" value="{{ producto['categoria'] }}" required>
+
+      <label>Marca:</label>
+      <input type="text" name="marca" value="{{ producto['marca'] }}" required>
+
+
+      <label>Precio (S/.):</label>
+      <input type="number" step="0.01" name="precio" value="{{ producto['precio'] }}" min="0">
+
+      <button type="submit">💾 Guardar Cambios</button>
+    </form>
+
+    <a class="back-link" href="{{ url_for('index') }}">⬅️ Volver al Inventario</a>
+  </div>
+</body>
+</html>
